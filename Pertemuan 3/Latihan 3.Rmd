@@ -1,0 +1,12 @@
+---
+title: "Untitled"
+author: "G1401211066_Oktavia Galih Pratiwi"
+date: "2023-09-12"
+output: html_document
+---
+
+```{r}
+A <- 3+4+5
+A
+```
+
