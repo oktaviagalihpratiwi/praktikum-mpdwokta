@@ -1,5 +1,5 @@
 ---
-title: "Tugas Praktikum 2 MPDW"
+title: "Tugas Praktikum 2"
 author: "G1401211066_Oktavia Galih Pratiwi"
 date: "2023-09-10"
 output: html_document
