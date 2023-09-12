@@ -121,10 +121,10 @@ length(fitValue)
 ### Diagnostik dengan eksploratif
 par(mfrow = c(1,3))
 qqnorm(sisaan)
-qqline(sisaan, col = "steelblue", lwd = 2)
-plot(fitValue, sisaan, col = "steelblue", pch = 20, xlab = "Sisaan", ylab = "Fitted Values", main = "Sisaan vs Fitted Values")
+qqline(sisaan, col = "blue", lwd = 2)
+plot(fitValue, sisaan, col = "blue", pch = 20, xlab = "Sisaan", ylab = "Fitted Values", main = "Sisaan vs Fitted Values")
 abline(a = 0, b = 0, lwd = 2)
-hist(sisaan, col = "steelblue")
+hist(sisaan, col = "blue")
 ```
 ```{r}
 plot(residual, type="o", 
