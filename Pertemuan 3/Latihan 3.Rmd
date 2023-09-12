@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ---
 title: "Untitled"
 author: "G1401211066_Oktavia Galih Pratiwi"
@@ -8,5 +9,8 @@ output: html_document
 ```{r}
 A <- 3+4+5
 A
+B <- 6
 ```
+=======
+>>>>>>> 7f2ad30e19d39fdf66fca268fe56f97125c20116
 
