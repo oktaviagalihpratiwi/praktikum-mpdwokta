@@ -127,7 +127,7 @@ abline(a = 0, b = 0, lwd = 2)
 hist(sisaan, col = "blue")
 ```
 ```{r}
-plot(residual, type="o", 
+plot(sisaan, type="o", 
      ylab = "Sisaan", xlab = "Order", main = "Sisaan vs Order")
 abline(h = 0, col='red')
 ```
@@ -135,10 +135,11 @@ abline(h = 0, col='red')
 Plot Sisaan vs Order menunjukkan pola naik turun sehingga keberadaan autokorelasi terindikasi.
 ###Uji ACF dan PACF
 ```{r}
-acf(residual)
+acf(sisaan)
 ```
+
 ```{r}
-pacf(residual)
+pacf(sisaan)
 ```
 
 Berdasarkan plot ACF dan PACF, terlihat bahwa terdapat titik di luar interval kepercayaan (garis biru). Hal ini menunjukkan adanya autokorelasi yang signifikan.
@@ -173,10 +174,10 @@ rho
 
 ```{r}
 #Transformasi Manual
-Y.trans<- data$Y[-1]-data$Y[-100]*rho
-X2.trans<- data$X2[-1]-data$X2[-100]*rho
-X4.trans<- data$X4[-1]-data$X4[-100]*rho
-X5.trans<- data$X5[-1]-data$X5[-100]*rho
+Y.trans<- data_wind$Y[-1]-data_wind$Y[-100]*rho
+X2.trans<- data_wind$X2[-1]-data_wind$X2[-100]*rho
+X4.trans<- data_wind$X4[-1]-data_wind$X4[-100]*rho
+X5.trans<- data_wind$X5[-1]-data_wind$X5[-100]*rho
 
 modelCOmanual<- lm(Y.trans ~ X2.trans + X4.trans + X5.trans)
 summary(modelCOmanual)
@@ -222,7 +223,7 @@ hildreth.lu.func<- function(r, modelterbaik){
 
 #Pencariab rho yang meminimumkan SSE
 r <- c(seq(-0.9,0.9, by= 0.1))
-tab <- data.frame("rho" = r, "SSE" = sapply(r, function(i){deviance(hildreth.lu.func(i, modelbest))}))
+tab <- data.frame("rho" = r, "SSE" = sapply(r, function(i){deviance(hildreth.lu.func(i, modelterbaik))}))
 round(tab, 4)
 
 ```
@@ -231,7 +232,7 @@ Pertama-tama akan dicari di mana kira-kira $ρ$ yang menghasilkan SSE minimum. P
 ```{r}
 #Rho optimal di sekitar -0.3
 rOpt <- seq(-0.4,-0.2, by= 0.001)
-tabOpt <- data.frame("rho" = rOpt, "SSE" = sapply(rOpt, function(i){deviance(hildreth.lu.func(i, modelbest))}))
+tabOpt <- data.frame("rho" = rOpt, "SSE" = sapply(rOpt, function(i){deviance(hildreth.lu.func(i, modelterbaik))}))
 head(tabOpt[order(tabOpt$SSE),])
 
 #Grafik SSE optimum
@@ -258,6 +259,7 @@ sseModelawal <- anova(modelterbaik)$`Sum Sq`[-(1:3)]
 sseModelCO <- anova(modelCOmanual)$`Sum Sq`[-(1:3)]
 sseModelHL <- anova(modelHL)$`Sum Sq`[-(1:3)]
 mseModelawal <- sseModelawal/length(data_wind$Y)
+mseModelCO <- sseModelCO/length(data_wind$Y)
 mseModelHL <- sseModelHL/length(data_wind$Y)
 akurasi <- matrix(c(sseModelawal,sseModelCO,sseModelHL,
                     mseModelawal,mseModelCO,mseModelHL),nrow=2,ncol=3,byrow = T)
