@@ -13,13 +13,24 @@ library(dynlm)
 library(MLmetrics)
 library(lmtest)
 library(car)
+library(rio)
 ```
+
+## Data Wind Power Forecasting
+Dataset ini mendeskripsikan pengamatan kualitas udara di New Delhi dalam 72 jam terakhir. Fitur-fitur yang disebutkan meliputi Indeks Kualitas Udara (Air Quality Index atau AQI), tanggal dan waktu, stempel waktu (dalam zona waktu lokal IST dan UTC), serta tingkat senyawa kimia seperti Karbon Monoksida (CO), Nitrogen Dioksida (NO2), Ozon (O3), Belerang Dioksida (SO2), dan partikulat matter (PM10 dan PM25). Dalam analisis ini hanya menggunakan peubah AQI dan PM25
+```{r}
+data_aqi <- data.frame(
+  Kode = c("Y", "X"),
+  Variabel = c("AQI", "PM25")
+)
+data_aqi
+```
+
 
 ## Impor Data
 
 ```{r}
-library(readxl)
-data_aqi <- read_xlsx("C:/Users/oktav/Downloads/KULIAH/SEMESTER 5/METODE PERAMALAN DERET WAKTU/praktikum-mpdwokta/data_aqi.xlsx")
+data_aqi<- import("https://raw.githubusercontent.com/oktaviagalihpratiwi/praktikum-mpdwokta/main/Pertemuan%203/data_aqi.xlsx")
 str(data_aqi)
 data_aqi
 ```
