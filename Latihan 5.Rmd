@@ -6,7 +6,7 @@ output: html_document
 ---
 ```{r}
 library(ggplot2)
-library(tsibble) #bikin tabel
+library(tsibble)
 library(tseries)
 library(MASS) 
 library(rio)
