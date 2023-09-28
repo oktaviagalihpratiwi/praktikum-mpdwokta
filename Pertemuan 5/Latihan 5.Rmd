@@ -1,5 +1,5 @@
 ---
-title: "Praktikum Metode Peramalan Deret Waktu Minggu 5"
+title: "Tugas Praktikum Metode Peramalan Deret Waktu Minggu 5"
 author: "G1401211066_Oktavia Galih Pratiwi"
 date: "2023-09-26"
 output: html_document
