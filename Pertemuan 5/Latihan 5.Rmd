@@ -1,0 +1,143 @@
+---
+title: "Tugas Praktikum Metode Peramalan Deret Waktu Minggu 5"
+author: "G1401211066_Oktavia Galih Pratiwi"
+date: "2023-09-26"
+output: html_document
+---
+```{r}
+library(ggplot2)
+library(tsibble)
+library(tseries)
+library(MASS) 
+library(rio)
+```
+
+## Mengimpor data Europe Brent Spot Price FOB Dollars per Barrel
+
+```{r}
+databrentprice <- import("https://raw.githubusercontent.com/oktaviagalihpratiwi/praktikum-mpdwokta/main/Data/data_brentprice.csv")
+databrentprice
+stas <- ts(databrentprice$Price)
+stas
+```
+
+### Plot *Time Series*
+
+```{r}
+plot_stas <- stas |> as_tsibble() |> 
+  ggplot(aes(x = index, y = value)) + geom_line() + theme_bw() +
+  xlab("Obs") + ylab("Nilai")
+plot_stas
+mean(stas)
+```
+Berdasarkan plot time series tersebut, terlihat bahwa data tidak stasioner dalam rataan dan ragam, ditandai dengan adanya lebar pita pada plot yang cenderung berbeda.
+
+### Plot ACF
+
+```{r}
+acf(stas)
+```
+Berdasarkan plot ACF, terlihat bahwa plot ACF pada data tersebut menurun secara perlahan (*tails off slowly*) yang menandakan data tidak stasioner dalam rataan.
+
+### Uji ADF
+
+```{r}
+tseries::adf.test(stas)
+```
+$H_0$ : Data tidak stasioner dalam rataan
+
+$H_1$ : Data stasioner dalam rataan
+
+Berdasarkan uji ADF tersebut, didapat *p-value* sebesar 0.4759 yang lebih besar dari taraf nyata 5% (terima H0) dan menandakan bahwa data tidak stasioner dalam rataan. Hal ini sesuai dengan hasil eksplorasi menggunakan plot time series dan plot ACF.
+
+### Plot Box-Cox
+
+```{r}
+n <- length(databrentprice$Price)
+n
+index <- seq(1:n) #banyaknya data
+bc = boxcox(stas~index, lambda = seq(-1,4,by=0.01))
+#Nilai Rounded Lambda
+lambda <- bc$x[which.max(bc$y)]
+lambda
+#SK
+bc$x[bc$y > max(bc$y) - 1/2 * qchisq(.95,1)]
+```
+Gambar di atas menunjukkan nilai *rounded value* ($\lambda$) optimum sebesar **0.22** dan pada selang kepercayaan 95% nilai memiliki batas bawah **-0.01** dan batas atas **0.46**. Selang tersebut tidak memuat nilai 1 sehingga dapat dikatakan bahwa data tersebut tidak stasioner dalam ragam.
+
+### Partisi Data
+
+#### Bagian 1
+
+```{r}
+dt_stas1 <- stas[1:105] |> ts()
+mean(dt_stas1)
+```
+
+
+```{r}
+var(dt_stas1)
+```
+
+#### Plot Time Series
+
+```{r}
+dt_stas1 |> as_tsibble() |> 
+  ggplot(aes(x = index, y = value)) +
+  geom_line() + theme_bw() +
+  xlab("Obs") + ylab("Nilai")
+```
+Berdasarkan plot time series tersebut, terlihat bahwa data tidak stasioner dalam rataan karena masih terdapat tren positif pada data.
+
+#### Plot ACF
+
+```{r}
+acf(dt_stas1)
+```
+Berdasarkan plot ACF, terlihat bahwa plot ACF pada data tersebut menurun secara perlahan (tails off slowly) yang menandakan data tidak stasioner dalam rataan.
+
+#### Uji ADF
+```{r}
+adf.test(dt_stas1)
+```
+$H_0$ : Data tidak stasioner dalam rataan
+
+$H_1$ : Data stasioner dalam rataan
+
+Berdasarkan uji ADF tersebut, didapat *p-value* sebesar 0.6521 yang lebih besar dari taraf nyata 5% (terima H0) dan menandakan bahwa data tidak stasioner dalam rataan. Hal ini sesuai dengan hasil eksplorasi menggunakan plot time series dan plot ACF.
+
+#### Bagian 2
+```{r}
+dt_stas2 <- stas[106:283] |> ts()
+mean(dt_stas2)
+```
+```{r}
+var(dt_stas2)
+```
+#### Plot Time Series
+
+```{r}
+dt_stas2 |> as_tsibble() |> 
+  ggplot(aes(x = index, y = value)) +
+  geom_line() + theme_bw() +
+  xlab("Obs") + ylab("Nilai")
+```
+Berdasarkan plot time series tersebut, terlihat bahwa data tidak stasioner dalam rataan karena masih terdapat tren pada data, dan tidak stasioner dalam ragam karena memiliki lebar pita yang cenderung tidak sama.
+
+#### Plot ACF
+
+```{r}
+acf(dt_stas2)
+```
+
+Berdasarkan plot ACF, terlihat bahwa plot ACF pada data tersebut menurun secara perlahan (tails off slowly) yang menandakan data tidak stasioner dalam rataan
+
+#### Uji ADF
+```{r}
+adf.test(dt_stas2)
+```
+$H_0$ : Data tidak stasioner dalam rataan
+
+$H_1$ : Data stasioner dalam rataan
+
+Berdasarkan uji ADF tersebut, didapat *p-value* sebesar 0.3663 yang lebih besar dari taraf nyata 5% (terima H0) dan menandakan bahwa data tidak stasioner dalam rataan. Hal ini sesuai dengan hasil eksplorasi menggunakan plot time series dan plot ACF.
