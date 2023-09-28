@@ -308,7 +308,7 @@ akurasi
 ```
 Mean Absolute Percentage Error (MAPE) merupakan ukuran untuk mengebvaluasi akurasi dari suatu model atau prediksi. Jadi, semakin kecil nilai MAPE, semakin mendekati prediksi dengan nilai aktualnya. Ini menunjukkan tingkat ketepatan prediksi yang tinggi.
 
-Dengan kata lain, dalam konteks MAPE, "yang bagus" adalah model atau prediksi dengan MAPE yang kecil, karena hal itu menandakan bahwa model tersebut memberikan prediksi yang akurat dan mendekati nilai aktual. Dari model-model yang telah diujikan, *DLM 2* memiliki nilai MAPE terkecil sehingga dapat disimpulkan bahwa model terbaik dalam hal ini adalah model *DLM 2*,
+Dengan kata lain, dalam konteks MAPE, "yang baik" adalah model atau prediksi dengan MAPE yang kecil, karena hal itu menandakan bahwa model tersebut memberikan prediksi yang akurat dan mendekati nilai aktual. Dari model-model yang telah diujikan, *DLM 2* memiliki nilai MAPE terkecil sehingga dapat disimpulkan bahwa model terbaik dalam hal ini adalah model *DLM 2*,
 ### Plot
 
 ```{r}
