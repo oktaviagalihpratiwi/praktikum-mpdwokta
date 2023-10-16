@@ -1,5 +1,5 @@
 ---
-title: "Tugas Praktikum Minggu 7 Metode Peramalan Deret Waktu"
+title: "Tugas Praktikum Metode Peramalan Deret Waktu Minggu 6 dan 7"
 author: "G1401211066_Oktavia Galih Pratiwi"
 date: "2023-10-16"
 output: html_document
@@ -36,7 +36,7 @@ str(stas)
 ```{r}
 plot.ts(stas, lty=1, xlab="Time periode", ylab="Price", main="Plot Data Brent Price")
 ```
-Berdasarkan plot data deret waktu di atas, terlihat bahwa data cenderung memiliki trend yang naik turun yang menunjukkan data tidak stasioner dalam rataan dan ragam, ditandai dengan adanya lebar pita pada plot yang cenderung berbeda. Berdasarkan pola data, pembagian data latih dan data uji ditetapkan dengan proporsi 72%:28%.
+Berdasarkan plot data deret waktu di atas, terlihat bahwa data cenderung memiliki trend naik turun yang menunjukkan data tidak stasioner dalam rataan dan ragam. Hal ini ditandai dengan data yang tidak bergerak pada nilai tengah tertentu dan adanya lebar pita pada plot yang cenderung berbeda. Berdasarkan pola data, pembagian data latih dan data uji ditetapkan dengan proporsi 72%:28%.
 
 
 ### Plot *Time Series* Data Latih
@@ -122,14 +122,14 @@ Berdasarkan uji ADF tersebut, didapat *p-value* sebesar 0.01 yang lebih kecil da
 ```{r}
 acf(train.diff)
 ```
-Berdasarkan plot tersebut, terlihat bahwa plot ACF cenderung *cuts off* pada lag ke 1, sehingga jika plot PACF dianggap *tails of*, maka model tentatifnya adalah ARIMA(0,1,1).
+Berdasarkan plot tersebut, terlihat bahwa plot ACF cenderung *cuts off* pada lag ke 1, sehingga jika plot PACF dianggap *tails off*, maka model tentatifnya adalah ARIMA(0,1,1).
 
 #### Plot PACF
 
 ```{r}
 pacf(train.diff)
 ```
-Berdasarkan plot tersebut, terlihat bahwa plot PACF cenderung *cuts off* pada lag ke 1, sehingga jika plot ACF dianggap *tails of*, maka model tentatifnya adalah ARIMA(1,1,0).
+Berdasarkan plot tersebut, terlihat bahwa plot PACF cenderung *cuts off* pada lag ke 1, sehingga jika plot ACF dianggap *tails off*, maka model tentatifnya adalah ARIMA(1,1,0).
 
 Jika baik plot ACF maupun plot PACF keduanya dianggap tails of, maka model yang terbentuk adalah ARIMA(1,1,1).
 
@@ -170,7 +170,7 @@ lmtest::coeftest(model3.da) #Seluruh parameter signifikan
 
 ```{r}
 model4.da=Arima(train.diff, order=c(0,1,2),method="ML")
-summary(model4.da) #AIC=1268.24
+summary(model4.da) #AIC=1273.32
 lmtest::coeftest(model4.da) #Seluruh parameter signifikan
 ```
 
@@ -289,7 +289,7 @@ $H_0$ : Nilai tengah sisaan sama dengan 0
 
 $H_1$ : Nilai tengah sisaan tidak sama dengan 0
 
-Berdasarkan uji-ttersebut, didapat *p-value* sebesar 0.6774 yang lebih besar dari taraf nyata 5% sehingga tidak tolak $H_0$ dan menandakan bahwa nilai tengah sisaan sama dengan nol.Hal ini sesuai dengan eksplorasi.
+Berdasarkan uji tersebut, didapat *p-value* sebesar 0.6774 yang lebih besar dari taraf nyata 5% sehingga tidak tolak $H_0$ dan menandakan bahwa nilai tengah sisaan sama dengan nol.Hal ini sesuai dengan eksplorasi.
 
 
 ## Overfitting
@@ -309,7 +309,7 @@ Model hasil overfitting terdapat parameter yang tidak signifikan, sehingga model
 
 ## Peramalan
 
-Peramalan dilakukan menggunakan fungsi `forecast()` . Contoh peramalan berikut ini dilakukan untuk 94 hari ke depan.
+Peramalan dilakukan menggunakan fungsi `forecast()`. Contoh peramalan berikut ini dilakukan untuk 94 hari ke depan.
 
 ```{r}
 #---FORECAST---#
