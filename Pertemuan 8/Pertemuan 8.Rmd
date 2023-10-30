@@ -1,1 +1,328 @@
+---
+title: "Pertemuan 8 - Kelompok 15"
+author:
+- Lutfi Syahreza Lubis
+- Reyzha Siva Dewi
+- Oktavia Galih Pratiwi
+- Aisyah Nuruzzahra Tirtasuwanda
+output:
+  html_document:
+    theme: yeti
+    toc: true
+    toc_float: true
+  word_document: default
+  pdf_document: default
+---
 
+## Packages
+
+```{r}
+library(ggplot2)
+library(tsibble)
+library(tseries)
+library(MASS)
+library(forecast)
+library(TSA)
+library(TTR)
+library(aTSA)
+library(graphics)
+```
+
+## Input Data
+
+```{r}
+data <- rio::import("https://raw.githubusercontent.com/lutfi-reza/mpdw-lutfi-reza/main/data/Jumlah-Penumpang-Kereta-Api.csv")
+data <- data[1:105,]
+dim(data)
+head(data)
+```
+
+```{r}
+data.ts <- data$`Jumlah Penumpang KAI Jawa`
+data.ts <- ts(data.ts)
+```
+
+## Eksplorasi 
+
+### Plot Data Penuh
+
+```{r}
+plot.ts(data.ts, lty=1, xlab="Periode", ylab="Jumlah Penumpang KAI Jawa", main="Plot Data Jumlah Penumpang KAI Jawa")
+```
+
+Berdasarkan plot data di atas, terlihat bahwa data cenderung memiliki tren naik. Selanjutnya, berdasarkan plot, data akan dilakukan proporsi/perbandingan, yaitu 80:20.
+
+### Pembagian Data
+
+```{r}
+data.train <- data$`Jumlah Penumpang KAI Jawa`[1:84]
+train.ts <- ts(data.train)
+data.test <- data$`Jumlah Penumpang KAI Jawa`[85:105]
+test.ts <- ts(data.test)
+```
+
+### Plot Data Latih
+
+```{r}
+plot.ts(train.ts, lty=1, xlab="Periode", ylab="Jumlah Penumpang KAI Jawa", main="Plot Jumlah Penumpang KAI Jawa")
+```
+
+Berdasarkan plot data tersebut, terlihat bahwa data cenderung tidak stasioner dalam nilai tengah maupun ragam.
+
+### Plot Data Uji
+
+```{r}
+plot.ts(test.ts, lty=1, xlab="Periode", ylab="Jumlah Penumpang KAI Jawa", main="Plot Jumlah Penumpang KAI Jawa")
+```
+
+## Uji Stasioneritas Data
+
+### Plot ACF
+
+```{r}
+acf(train.ts)
+```
+
+Terlihat bahwa plot ACF menuruh secara perlaha atau *tails of slowly*. Artinya, data tidak stasioner dalam rataan.
+
+### Uji ADF
+
+```{r}
+tseries::adf.test(test.ts)
+```
+
+$H_0$ : Data tidak stasioner dalam rataan
+
+$H_1$ : Data stasioner dalam rataan
+
+Didapatkan nilai *p-value* sebesar 0.09842 yang lebih besar dari taraf nyata 5% sehingga tak tolak $H_0$. Artinya, data tidak stasioner dalam rataan. Hasil ini, sesuai denga hasil eksplorasi menggunakan plot time series dan plot ACF sehingga perlu ditangani.
+
+### Plot Box-Cox
+
+```{r}
+index <- seq(1:84)
+bc = boxcox(train.ts~index, lambda = seq(-1,2,by=1))
+#Nilai Rounded Lambda
+lambda <- bc$x[which.max(bc$y)]
+lambda
+#SK
+bc$x[bc$y > max(bc$y) - 1/2 * qchisq(.95,1)]
+```
+
+Plot Box-Cox menunjukkan nilai *rounded value* ($\lamda$) optimum sebesar 0.60606 dan pada selang kepercayaan 95% yang memiliki batas bawah 0.0909 dan batas atas 1.12121. Selang tersebut mengandung nilai satu sehingga data stasioner dalam ragam.
+
+## Penanganan Ketidakstasioneran Data
+
+```{r}
+train.diff<-diff(train.ts,differences = 1) 
+train.diff
+plot.ts(train.diff, lty=1, xlab="Periode", ylab="Jumlah Penumpang KAI Jawa", main="Plot Difference Jumlah Penumpang KAI Jawa")
+```
+
+Berdasarkan plot, terlihat bahwa data sudah stasioner dalam rataan ditandai dengan data bergerak pada nilai tengah tertentu. Tidak terdapat trend ataupun musiman pada data.
+
+### Plot ACF
+
+```{r}
+acf(train.diff)
+```
+
+Berdasarkan plot, terlihat bahwa ACF *cuts off* pada lag ke 1. Hal ini menandakan data sudah stasioner dalam rataan dan ketidakstasioneran data telah berhasil tertangani.
+
+### Uji ADF
+
+```{r}
+tseries::adf.test(train.diff)
+```
+
+$H_0$ : Data tidak stasioner dalam rataan
+
+$H_1$ : Data stasioner dalam rataan
+
+Berdasarkan uji ADF, didapatkan *p-value* sebesar 0.01 nilai tersebut lebih kecil dari taraf nyata 5% sehingga tolak $H_0$ atau data stasioner dalam rataan. Data sudah bisa dinyatakan stasioner sehingga dapat dilanjutkan ke pemodelan.
+
+## Identifikasi Model
+
+### Plot ACF
+
+```{r}
+acf(train.diff)
+```
+
+Berdasarkan plot, terlihat bahwa plot ACF cenderung *cuts off* pada lag ke 1, sehingga jika plot PACF dianggap *tails off*, maka model tentatifnya adalah ARIMA(0,1,1).
+
+### Plot PACF
+
+```{r}
+pacf(train.diff)
+```
+
+Plot PACF di atas cenderung *tails off* sehingga bila plot ACF-nya dianggap *tails off*, maka model yang terbentuk ARIMA(2,1,0).
+
+### Plot EACF
+
+```{r}
+eacf(train.diff)
+```
+
+Identifikasi model menggunakan plot EACF dilakukan dengan melihat ujung segitiga pada pola segitiga nol. Dari hasil tersebut, model tentatif yang terbentuk adalah ARIMA (2,1,1), ARIMA(0,1,1), dan ARIMA(3,1,2).
+
+## Pendugaan Parameter Model Tentatif
+
+### ARIMA(2,1,1)
+
+```{r}
+model1.da=Arima(train.diff, order=c(2,1,1),method="ML")
+summary(model1.da) #AIC=1422.32
+lmtest::coeftest(model1.da) #seluruh parameter signifikan
+```
+
+### ARIMA (0,1,1)
+
+```{r}
+model2.da=Arima(train.diff, order=c(0,1,1),method="ML")
+summary(model2.da) #AIC=1447.53
+lmtest::coeftest(model2.da) #seluruh parameter signifikan
+```
+
+### ARIMA(3,1,2)
+
+```{r}
+model3.da=Arima(train.diff, order=c(3,1,2),method="ML")
+summary(model3.da) #AIC=1425.73
+lmtest::coeftest(model3.da) #hanya ma1 yang berpengaruh signifikan
+```
+
+### ARIMA(2,1,0)
+```{r}
+model3.da=Arima(train.diff, order=c(2,1,0),method="ML")
+summary(model3.da) #AIC=1453.78
+lmtest::coeftest(model3.da) #semua parameter berpengaruh signifikan
+```
+
+
+Berdasarkan pendugaan parameter di atas, nilai AIC terkecil dan seluruhnya signifikan sehingga model yang dipilih adala model ARIMA(2,1,1).
+
+## Analisis Sisaan
+
+Model terbaik hasil identifikasi kemudian dicek asumsi sisaannya. Sisaan model ARIMA harus memenuhi asumsi normalitas, kebebasan sisaan, dan kehomogenan ragam. Diagnostik model dilakukan secara eksplorasi dan uji formal.
+
+### Eksplorasi Sisaan
+
+#### Eksplorasi
+
+```{r}
+sisaan.da <- model1.da$residuals 
+par(mfrow=c(2,2)) 
+qqnorm(sisaan.da) 
+qqline(sisaan.da, col = "blue", lwd = 2) 
+plot(c(1:length(sisaan.da)),sisaan.da) 
+acf(sisaan.da) 
+pacf(sisaan.da) 
+```
+
+Berdasarkan plot kuantil-kuantil normal, secara eksplorasi ditunjukkan sisaan menyebar tidak normal ditandai dengan titik-titik yang cenderung tidak mengikuti garis $45^{\circ}$. Kemudian dapat dilihat lebar pita sisaan yang cenderung tidak sama menandakan bahwa sisaan memiliki ragam yang homogen. Kondisi ini akan diuji lebih lanjut dengan uji formal. Plot ACF dan PACF menunjukan bahwa sisaan saling bebas.
+
+## Uji Formal
+
+### Sisaan Menyebar Normal
+
+```{r}
+ks.test(sisaan.da,"pnorm")
+```
+
+$H_0$ : Sisaan menyebar normal
+
+$H_1$ : Sisaan tidak menyebar normal
+
+Berdasarkan uji Kolmogorov-Smirnov, didapatkan *p-value* sebesar 2.2e-16 yang kurang dari taraf nyata 5% sehingga tolak $H_0$ dan menandakan bahwa sisaan tidak menyebar normal. Hal ini memiliki hasil yang berbeda dari eksplorasi dengan plot.
+
+### Sisaan Saling Bebas/Tidak Ada Autokorelasi
+
+```{r}
+Box.test(sisaan.da, type = "Ljung")
+```
+
+$H_0$ : Sisaan saling bebas
+
+$H_1$ : Sisaan tidak tidak saling bebas
+
+Berdasarkan uji Ljung-Box, didapatkan nilai *p-value* sebesar 0.8069 yang lebih besar dari taraf nyata 5% sehingga tak tolak $H_0$ . Artinya, sisaan saling bebas.
+
+### Sisaan Homogen
+
+```{r}
+Box.test((sisaan.da)^2, type = "Ljung")
+```
+
+$H_0$ : Ragam sisaan homogen
+
+$H_1$ : Ragam sisaan tidak homogen
+
+Berdasarkan uji Ljung-Box terhadap sisaan kuadrat, didapatkan nilai *p-value* sebesar 0.6408 yang lebih besar dari taraf nyata 5% sehingga tolak $H_0$ artinya ragam sisaan tidak homogen.
+
+### Nilai Tengah Sisaan Sama Dengan Nol
+
+```{r}
+t.test(sisaan.da, mu = 0, conf.level = 0.95)
+```
+
+$H_0$ : nilai tengah sisaan sama dengan 0
+
+$H_1$ : nilai tengah sisaan tidak sama dengan 0
+
+Berdasarkan uji-ttersebut, didapat *p-value* sebesar 0.2263 yang lebih besar dari taraf nyata 5% sehingga tak tolak $H_0$ dan menandakan bahwa nilai tengah sisaan sama dengan nol.
+
+## Overfitting
+
+Tahapan selanjutnya adalah *overfitting* dilakukan dengan menaikkan orde AR(p) dan MA(q) dari model ARIMA(2,1,1) untuk melihat apakah terdapat model lain yang lebih baik dari model saat ini. Kandidat model *overfitting* adalah ARIMA(3,1,1) dan ARIMA(2,1,2).
+
+### Model ARIMA(3,1,1)
+
+```{r}
+model.overfit1=Arima(train.diff, order=c(3,1,1),method="ML")
+summary(model.overfit1) #1424.03
+lmtest::coeftest(model.overfit1) #ar3 tidak berpengaruh signifikan
+```
+
+### Model ARIMA (2,1,2)
+
+```{r}
+model.overfit2=Arima(train.diff, order=c(2,1,2),method="ML")
+summary(model.overfit2) #1423.74
+lmtest::coeftest(model.overfit2) #hanya ma3 yang signifikan
+```
+
+Berdasarkan hasil AIC dan parameter, model sebelum overfitting merupakan model yang paling baik karena memiliki nilai AIC terkecil dan semua parameternya berpengaruh. Oleh karena itu, model yang dipilih adalah ARIMA (2,1,1).
+
+## Peramalan
+
+Peramalan berikut ini dilakukan untuk 27 hari ke depan.
+
+```{r}
+ramalan.da <- forecast::forecast(model1.da, h = 27) 
+ramalan.da
+data.ramalan.da <- ramalan.da$mean
+plot(ramalan.da)
+```
+
+Berdasarkan hasil plot ramalan di atas, dapat dilihat bahwa ramalan ARIMA(2,1,1) cenderung stabil hingga akhir periode. Selanjutnya, dapat dicari nilai akurasi antara hasil ramalan dengan data uji sebagai berikut.
+
+```{r}
+pt_1 <- train.ts[84] #nilai akhir data latih
+hasil.forc.Diff <- data.ramalan.da
+hasil <- diffinv(hasil.forc.Diff, differences = 1) + pt_1
+hasil
+#has.1 sama hasilnya dengan: cumsum(c(pt_1,hasil.forc.Diff))
+ts.plot(train.ts,hasil)
+```
+
+```{r}
+perbandingan.da<-matrix(data=c(head(test.ts, n=27), hasil[-1]),
+                     nrow = 27, ncol = 2)
+colnames(perbandingan.da)<-c("Aktual","Hasil Forecast")
+perbandingan.da
+accuracy(ts(hasil[-1]), head(test.ts, n=27))
+```
+
+Dari hasil diperoleh nilai MAPE 11.28561, model tersebut baik untuk menggambarkan model deret waktu.
